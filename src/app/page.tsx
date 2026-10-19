@@ -4,13 +4,19 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { CreatePoolPayload } from "@/types";
-import { Calculator, Plus, Users, Wallet } from "lucide-react";
+import {
+  Calculator,
+  PiggyBank,
+  Plus,
+  Users,
+  Wallet,
+} from "lucide-react";
 
 function formatBYN(amount: number): string {
   return `${amount.toFixed(2)} BYN`;
 }
 
-export default function CreatePoolPage() {
+export default function HomePage() {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [totalAmount, setTotalAmount] = useState<string>("");
@@ -73,118 +79,143 @@ export default function CreatePoolPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-4 sm:p-6">
-      <div className="w-full max-w-lg bg-white rounded-3xl shadow-xl p-6 sm:p-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-full bg-moby-100 flex items-center justify-center text-moby-600">
-            <Wallet className="w-6 h-6" />
+    <main className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6">
+      <div className="w-full max-w-lg space-y-6">
+        <div className="bg-white rounded-3xl shadow-xl p-6 sm:p-8">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-full bg-moby-100 flex items-center justify-center text-moby-600">
+              <Wallet className="w-6 h-6" />
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
+              Moby Split
+            </h1>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
-            Moby Split
-          </h1>
+          <p className="text-slate-500">
+            Choose what you want to do today.
+          </p>
         </div>
-        <p className="text-slate-500 mb-8">
-          Create a shared pool and split the bill with friends.
-        </p>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label
-              htmlFor="title"
-              className="block text-sm font-medium text-slate-700 mb-2"
-            >
-              Pool title
-            </label>
-            <div className="relative">
-              <Wallet className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-              <input
-                id="title"
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. Gift for colleague"
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-moby-500 focus:ring-2 focus:ring-moby-200 outline-none transition"
-              />
-            </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-moby-600 text-white rounded-2xl p-5 shadow-lg ring-2 ring-moby-600">
+            <Wallet className="w-7 h-7 mb-3" />
+            <h2 className="font-bold text-lg">Group Split</h2>
+            <p className="text-sm opacity-90 mt-1">Split bills with friends</p>
           </div>
-
-          <div>
-            <label
-              htmlFor="totalAmount"
-              className="block text-sm font-medium text-slate-700 mb-2"
-            >
-              Total amount (BYN)
-            </label>
-            <div className="relative">
-              <Calculator className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-              <input
-                id="totalAmount"
-                type="number"
-                min="0.01"
-                step="0.01"
-                value={totalAmount}
-                onChange={(e) => setTotalAmount(e.target.value)}
-                placeholder="0.00"
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-moby-500 focus:ring-2 focus:ring-moby-200 outline-none transition"
-              />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 font-medium">
-                BYN
-              </span>
-            </div>
-          </div>
-
-          <div>
-            <label
-              htmlFor="participantsCount"
-              className="block text-sm font-medium text-slate-700 mb-2"
-            >
-              Number of participants
-            </label>
-            <div className="relative">
-              <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-              <input
-                id="participantsCount"
-                type="number"
-                min="2"
-                step="1"
-                value={participantsCount}
-                onChange={(e) => setParticipantsCount(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-moby-500 focus:ring-2 focus:ring-moby-200 outline-none transition"
-              />
-            </div>
-          </div>
-
-          <div className="bg-moby-50 rounded-2xl p-5 flex items-center justify-between">
-            <div>
-              <p className="text-sm text-moby-700 font-medium">Per person</p>
-              <p className="text-3xl font-bold text-moby-800">
-                {formatBYN(shareAmount)}
-              </p>
-            </div>
-            <div className="w-12 h-12 rounded-full bg-moby-100 flex items-center justify-center text-moby-600">
-              <Calculator className="w-6 h-6" />
-            </div>
-          </div>
-
-          {error && (
-            <p className="text-sm text-red-600 bg-red-50 rounded-lg px-4 py-3">
-              {error}
-            </p>
-          )}
-
           <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full flex items-center justify-center gap-2 bg-moby-600 hover:bg-moby-700 disabled:bg-slate-300 text-white font-semibold py-4 rounded-xl transition active:scale-[0.98]"
+            onClick={() => router.push("/piggy-bank")}
+            className="text-left bg-white hover:bg-amber-50 text-slate-900 rounded-2xl p-5 shadow-lg border border-slate-100 transition active:scale-[0.98]"
           >
-            {isSubmitting ? (
-              <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-              <Plus className="w-5 h-5" />
-            )}
-            {isSubmitting ? "Creating..." : "Create Pool"}
+            <PiggyBank className="w-7 h-7 mb-3 text-amber-500" />
+            <h2 className="font-bold text-lg">Piggy Bank</h2>
+            <p className="text-sm text-slate-500 mt-1">Kids savings goals</p>
           </button>
-        </form>
+        </div>
+
+        <div className="bg-white rounded-3xl shadow-xl p-6 sm:p-8">
+          <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+            <Users className="w-5 h-5 text-moby-600" />
+            Create a group pool
+          </h2>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label
+                htmlFor="title"
+                className="block text-sm font-medium text-slate-700 mb-2"
+              >
+                Pool title
+              </label>
+              <div className="relative">
+                <Wallet className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <input
+                  id="title"
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="e.g. Gift for colleague"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-moby-500 focus:ring-2 focus:ring-moby-200 outline-none transition"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label
+                htmlFor="totalAmount"
+                className="block text-sm font-medium text-slate-700 mb-2"
+              >
+                Total amount (BYN)
+              </label>
+              <div className="relative">
+                <Calculator className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <input
+                  id="totalAmount"
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  value={totalAmount}
+                  onChange={(e) => setTotalAmount(e.target.value)}
+                  placeholder="0.00"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-moby-500 focus:ring-2 focus:ring-moby-200 outline-none transition"
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-400 font-medium">
+                  BYN
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <label
+                htmlFor="participantsCount"
+                className="block text-sm font-medium text-slate-700 mb-2"
+              >
+                Number of participants
+              </label>
+              <div className="relative">
+                <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <input
+                  id="participantsCount"
+                  type="number"
+                  min="2"
+                  step="1"
+                  value={participantsCount}
+                  onChange={(e) => setParticipantsCount(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-moby-500 focus:ring-2 focus:ring-moby-200 outline-none transition"
+                />
+              </div>
+            </div>
+
+            <div className="bg-moby-50 rounded-2xl p-5 flex items-center justify-between">
+              <div>
+                <p className="text-sm text-moby-700 font-medium">Per person</p>
+                <p className="text-3xl font-bold text-moby-800">
+                  {formatBYN(shareAmount)}
+                </p>
+              </div>
+              <div className="w-12 h-12 rounded-full bg-moby-100 flex items-center justify-center text-moby-600">
+                <Calculator className="w-6 h-6" />
+              </div>
+            </div>
+
+            {error && (
+              <p className="text-sm text-red-600 bg-red-50 rounded-lg px-4 py-3">
+                {error}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full flex items-center justify-center gap-2 bg-moby-600 hover:bg-moby-700 disabled:bg-slate-300 text-white font-semibold py-4 rounded-xl transition active:scale-[0.98]"
+            >
+              {isSubmitting ? (
+                <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <Plus className="w-5 h-5" />
+              )}
+              {isSubmitting ? "Creating..." : "Create Pool"}
+            </button>
+          </form>
+        </div>
       </div>
     </main>
   );
