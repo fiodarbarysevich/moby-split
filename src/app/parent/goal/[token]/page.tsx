@@ -4,9 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { Goal, GoalContribution, GoalProof, GoalStatus } from "@/types";
+import { QRCodeSVG } from "qrcode.react";
 import confetti from "canvas-confetti";
 import {
   CheckCircle,
+  Copy,
+  Gift,
   Loader2,
   PiggyBank,
   ThumbsDown,
@@ -38,6 +41,9 @@ export default function ParentGoalPage() {
   const [error, setError] = useState<string | null>(null);
   const [actionProofId, setActionProofId] = useState<string | null>(null);
   const [hasCelebrated, setHasCelebrated] = useState(false);
+  const [giftToken, setGiftToken] = useState<string | null>(null);
+  const [giftCopied, setGiftCopied] = useState(false);
+  const [origin, setOrigin] = useState("");
 
   const { saved, progress } = useMemo(() => {
     if (!goal) return { saved: 0, progress: 0 };
@@ -49,6 +55,15 @@ export default function ParentGoalPage() {
       progress: goal.target_amount > 0 ? Math.min((sum / goal.target_amount) * 100, 100) : 0,
     };
   }, [contributions, goal]);
+
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
+
+  const giftUrl = useMemo(
+    () => (origin && giftToken ? `${origin}/gift/${giftToken}` : ""),
+    [origin, giftToken]
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -157,7 +172,7 @@ export default function ParentGoalPage() {
       supabase.removeChannel(proofsChannel);
       supabase.removeChannel(contributionsChannel);
     };
-  }, [goal?.id]);
+  }, [goal?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (goal && progress >= 100 && !hasCelebrated) {
@@ -197,6 +212,33 @@ export default function ParentGoalPage() {
     }
 
     setGoal({ ...goal, status });
+  }
+
+  async function createGiftLink() {
+    if (!goal) return;
+    const { data, error } = await supabase
+      .from("gift_links")
+      .insert({ child_name: goal.child_name, goal_id: goal.id })
+      .select("token")
+      .single();
+
+    if (error || !data) {
+      console.error(error);
+      return;
+    }
+
+    setGiftToken((data as { token: string }).token);
+  }
+
+  async function copyGiftLink() {
+    if (!giftUrl) return;
+    try {
+      await navigator.clipboard.writeText(giftUrl);
+      setGiftCopied(true);
+      setTimeout(() => setGiftCopied(false), 2000);
+    } catch {
+      setGiftCopied(false);
+    }
   }
 
   async function handleProofDecision(proof: GoalProof, approved: boolean) {
@@ -329,6 +371,41 @@ export default function ParentGoalPage() {
               <XCircle className="w-12 h-12 mx-auto text-red-500 mb-3" />
               <p className="text-lg font-semibold text-slate-900">Goal declined</p>
               <p className="text-slate-500">You have declined this goal.</p>
+            </div>
+          )}
+
+          {goal.status !== "declined" && (
+            <div className="bg-rose-50 border border-rose-100 rounded-2xl p-5">
+              <h3 className="font-semibold text-rose-900 mb-2 flex items-center gap-2">
+                <Gift className="w-5 h-5" />
+                Invite relatives to gift
+              </h3>
+              <p className="text-sm text-rose-700 mb-3">
+                Generate a link or QR code for grandparents or relatives to send money to {goal.child_name}.
+              </p>
+              {!giftToken ? (
+                <button
+                  onClick={createGiftLink}
+                  className="inline-flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white font-medium px-5 py-2 rounded-xl transition"
+                >
+                  <Gift className="w-4 h-4" />
+                  Generate gift link
+                </button>
+              ) : (
+                <div className="space-y-4">
+                  <div className="bg-white rounded-2xl p-4 flex justify-center">
+                    <QRCodeSVG value={giftUrl} size={180} level="M" />
+                  </div>
+                  <p className="text-sm text-rose-800 break-all bg-white rounded-xl p-3">{giftUrl}</p>
+                  <button
+                    onClick={copyGiftLink}
+                    className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-medium px-5 py-2 rounded-xl transition"
+                  >
+                    <Copy className="w-4 h-4" />
+                    {giftCopied ? "Copied!" : "Copy gift link"}
+                  </button>
+                </div>
+              )}
             </div>
           )}
 

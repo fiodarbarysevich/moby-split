@@ -69,6 +69,71 @@ export interface CreateGoalPayload {
   photo_url?: string;
 }
 
+export type OutgoingCallStatus = "ACTIVE" | "VERIFIED" | "REPORTED_FRAUD" | "EXPIRED";
+
+export interface OutgoingCall {
+  id: string;
+  phone_number: string;
+  verification_code: string;
+  status: OutgoingCallStatus;
+  created_at: string;
+  call_starts_at: string;
+  expires_at: string;
+}
+
+export type WalletType = "spend" | "save" | "give";
+
+export interface ChildWallet {
+  id: string;
+  child_name: string;
+  wallet_type: WalletType;
+  balance: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AllowanceRule {
+  id: string;
+  child_name: string;
+  amount: number;
+  frequency: "weekly";
+  spend_percent: number;
+  save_percent: number;
+  give_percent: number;
+  auto_split_all: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AllowanceTransaction {
+  id: string;
+  child_name: string;
+  amount: number;
+  spend_amount: number;
+  save_amount: number;
+  give_amount: number;
+  created_at: string;
+}
+
+export interface GiftLink {
+  id: string;
+  child_name: string;
+  goal_id: string | null;
+  token: string;
+  created_at: string;
+}
+
+export interface Gift {
+  id: string;
+  gift_link_id: string;
+  child_name: string;
+  goal_id: string | null;
+  sender_name: string;
+  amount: number;
+  message: string | null;
+  created_at: string;
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -97,6 +162,39 @@ export interface Database {
         Insert: Omit<GoalContribution, "id" | "contributed_at">;
         Update: Partial<Omit<GoalContribution, "id" | "contributed_at">>;
       };
+      outgoing_calls: {
+        Row: OutgoingCall;
+        Insert: Omit<OutgoingCall, "id" | "created_at">;
+        Update: Partial<Omit<OutgoingCall, "id" | "created_at">>;
+      };
+      child_wallets: {
+        Row: ChildWallet;
+        Insert: Omit<ChildWallet, "id" | "created_at" | "updated_at">;
+        Update: Partial<Omit<ChildWallet, "id" | "created_at" | "updated_at">>;
+      };
+      allowance_rules: {
+        Row: AllowanceRule;
+        Insert: Omit<AllowanceRule, "id" | "created_at" | "updated_at">;
+        Update: Partial<Omit<AllowanceRule, "id" | "created_at" | "updated_at">>;
+      };
+      allowance_transactions: {
+        Row: AllowanceTransaction;
+        Insert: Omit<AllowanceTransaction, "id" | "created_at">;
+        Update: Partial<Omit<AllowanceTransaction, "id" | "created_at">>;
+      };
+      gift_links: {
+        Row: GiftLink;
+        Insert: Omit<GiftLink, "id" | "created_at" | "token">;
+        Update: Partial<Omit<GiftLink, "id" | "created_at" | "token">>;
+      };
+      gifts: {
+        Row: Gift;
+        Insert: Omit<Gift, "id" | "created_at">;
+        Update: Partial<Omit<Gift, "id" | "created_at">>;
+      };
     };
+    Views: {};
+    Functions: {};
+    Enums: {};
   };
 }

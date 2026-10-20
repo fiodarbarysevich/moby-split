@@ -1,10 +1,10 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { Goal, GoalContribution } from "@/types";
-import { Loader2, PiggyBank, Plus, Smile } from "lucide-react";
+import { ArrowLeft, Gift, Landmark, Loader2, PiggyBank, Plus, ShieldCheck, Smile } from "lucide-react";
 
 function formatBYN(amount: number): string {
   return `${amount.toFixed(2)} BYN`;
@@ -183,11 +183,41 @@ export default function PiggyBankDashboardPage() {
           </div>
         )}
 
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <button
+            onClick={() => router.push("/piggy-bank/wallets")}
+            className="text-left bg-white rounded-2xl shadow-lg p-5 hover:shadow-xl transition active:scale-[0.98]"
+          >
+            <Landmark className="w-7 h-7 mb-3 text-emerald-500" />
+            <h3 className="font-bold text-slate-900">My Wallets</h3>
+            <p className="text-sm text-slate-500 mt-1">Spend, Save, Give</p>
+          </button>
+          <button
+            onClick={() => router.push("/piggy-bank/gift-links")}
+            className="text-left bg-white rounded-2xl shadow-lg p-5 hover:shadow-xl transition active:scale-[0.98]"
+          >
+            <Gift className="w-7 h-7 mb-3 text-rose-500" />
+            <h3 className="font-bold text-slate-900">Gift Links</h3>
+            <p className="text-sm text-slate-500 mt-1">Links & QR codes for relatives</p>
+          </button>
+          <button
+            onClick={() => router.push("/family-banking")}
+            className="text-left bg-white rounded-2xl shadow-lg p-5 hover:shadow-xl transition active:scale-[0.98] sm:col-span-2"
+          >
+            <ShieldCheck className="w-7 h-7 mb-3 text-moby-600" />
+            <h3 className="font-bold text-slate-900">Симуляция семейного банкинга</h3>
+            <p className="text-sm text-slate-500 mt-1">
+              KYC родителя, верифицируемое согласие, возрастные карты и compliance
+            </p>
+          </button>
+        </div>
+
         <button
           onClick={() => router.push("/")}
-          className="w-full text-center text-slate-500 hover:text-slate-700 text-sm py-4"
+          className="w-full flex items-center justify-center gap-2 text-slate-500 hover:text-slate-700 text-sm py-4"
         >
-          ← Back to Moby Split
+          <ArrowLeft className="w-4 h-4" />
+          Back to Moby Split
         </button>
       </div>
     </main>

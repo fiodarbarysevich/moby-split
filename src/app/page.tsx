@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -6,8 +6,11 @@ import { supabase } from "@/lib/supabaseClient";
 import { CreatePoolPayload } from "@/types";
 import {
   Calculator,
+  Gift,
   PiggyBank,
   Plus,
+  Shield,
+  ShieldCheck,
   Users,
   Wallet,
 } from "lucide-react";
@@ -95,20 +98,56 @@ export default function HomePage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-moby-600 text-white rounded-2xl p-5 shadow-lg ring-2 ring-moby-600">
-            <Wallet className="w-7 h-7 mb-3" />
-            <h2 className="font-bold text-lg">Group Split</h2>
-            <p className="text-sm opacity-90 mt-1">Split bills with friends</p>
+        <div className="space-y-6">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">For kids</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <button
+                onClick={() => router.push("/piggy-bank")}
+                className="text-left bg-white hover:bg-amber-50 text-slate-900 rounded-2xl p-5 shadow-lg border border-slate-100 transition active:scale-[0.98]"
+              >
+                <PiggyBank className="w-7 h-7 mb-3 text-amber-500" />
+                <h2 className="font-bold text-lg">Piggy Bank</h2>
+                <p className="text-sm text-slate-500 mt-1">Savings goals & wallets</p>
+              </button>
+            </div>
           </div>
-          <button
-            onClick={() => router.push("/piggy-bank")}
-            className="text-left bg-white hover:bg-amber-50 text-slate-900 rounded-2xl p-5 shadow-lg border border-slate-100 transition active:scale-[0.98]"
-          >
-            <PiggyBank className="w-7 h-7 mb-3 text-amber-500" />
-            <h2 className="font-bold text-lg">Piggy Bank</h2>
-            <p className="text-sm text-slate-500 mt-1">Kids savings goals</p>
-          </button>
+
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">For parents</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <button
+                onClick={() => router.push("/piggy-bank/gift-links")}
+                className="text-left bg-white hover:bg-rose-50 text-slate-900 rounded-2xl p-5 shadow-lg border border-slate-100 transition active:scale-[0.98]"
+              >
+                <Gift className="w-7 h-7 mb-3 text-rose-500" />
+                <h2 className="font-bold text-lg">Gift Links</h2>
+                <p className="text-sm text-slate-500 mt-1">Generate links & QR codes for relatives</p>
+              </button>
+              <button
+                onClick={() => router.push("/family-banking")}
+                className="text-left bg-white hover:bg-emerald-50 text-slate-900 rounded-2xl p-5 shadow-lg border border-slate-100 transition active:scale-[0.98]"
+              >
+                <ShieldCheck className="w-7 h-7 mb-3 text-emerald-600" />
+                <h2 className="font-bold text-lg">Семейный банкинг</h2>
+                <p className="text-sm text-slate-500 mt-1">KYC, согласие, возрастной контроль</p>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">For the bank</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <button
+                onClick={() => router.push("/operator")}
+                className="text-left bg-white hover:bg-slate-50 text-slate-900 rounded-2xl p-5 shadow-lg border border-slate-100 transition active:scale-[0.98]"
+              >
+                <Shield className="w-7 h-7 mb-3 text-slate-700" />
+                <h2 className="font-bold text-lg">Safe-Call</h2>
+                <p className="text-sm text-slate-500 mt-1">Operator call verification</p>
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className="bg-white rounded-3xl shadow-xl p-6 sm:p-8">
@@ -220,3 +259,4 @@ export default function HomePage() {
     </main>
   );
 }
+

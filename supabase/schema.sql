@@ -175,3 +175,150 @@ CREATE POLICY "Allow anonymous insert on goal-photos"
   FOR INSERT
   TO anon
   WITH CHECK (bucket_id = 'goal-photos');
+
+-- ============================================================
+-- Safe-Call Verification / Anti-Fraud feature
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS public.outgoing_calls (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  phone_number TEXT NOT NULL DEFAULT '+375 (17) 229-99-99',
+  verification_code VARCHAR(4) NOT NULL,
+  status TEXT NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'VERIFIED', 'REPORTED_FRAUD', 'EXPIRED')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  call_starts_at TIMESTAMPTZ NOT NULL DEFAULT (NOW() + INTERVAL '1 minute'),
+  expires_at TIMESTAMPTZ NOT NULL DEFAULT (NOW() + INTERVAL '3 minutes')
+);
+
+ALTER TABLE public.outgoing_calls ADD COLUMN IF NOT EXISTS call_starts_at TIMESTAMPTZ NOT NULL DEFAULT (NOW() + INTERVAL '1 minute');
+
+CREATE INDEX IF NOT EXISTS idx_outgoing_calls_status ON outgoing_calls(status);
+CREATE INDEX IF NOT EXISTS idx_outgoing_calls_expires_at ON outgoing_calls(expires_at);
+
+SELECT add_table_to_realtime('outgoing_calls');
+
+ALTER TABLE public.outgoing_calls ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public select on outgoing_calls" ON public.outgoing_calls;
+CREATE POLICY "Allow public select on outgoing_calls"
+  ON public.outgoing_calls FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow public insert on outgoing_calls" ON public.outgoing_calls;
+CREATE POLICY "Allow public insert on outgoing_calls"
+  ON public.outgoing_calls FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public update on outgoing_calls" ON public.outgoing_calls;
+CREATE POLICY "Allow public update on outgoing_calls"
+  ON public.outgoing_calls FOR UPDATE USING (true);
+
+-- ============================================================
+-- Spend / Save / Give Wallets + Gift Links
+-- ============================================================
+
+-- Child wallets
+CREATE TABLE IF NOT EXISTS child_wallets (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  child_name TEXT NOT NULL,
+  wallet_type TEXT NOT NULL CHECK (wallet_type IN ('spend', 'save', 'give')),
+  balance NUMERIC(10, 2) NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(child_name, wallet_type)
+);
+
+-- Allowance rules
+CREATE TABLE IF NOT EXISTS allowance_rules (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  child_name TEXT NOT NULL UNIQUE,
+  amount NUMERIC(10, 2) NOT NULL,
+  frequency TEXT NOT NULL DEFAULT 'weekly' CHECK (frequency IN ('weekly')),
+  spend_percent INT NOT NULL CHECK (spend_percent >= 0 AND spend_percent <= 100),
+  save_percent INT NOT NULL CHECK (save_percent >= 0 AND save_percent <= 100),
+  give_percent INT NOT NULL CHECK (give_percent >= 0 AND give_percent <= 100),
+  auto_split_all BOOLEAN NOT NULL DEFAULT false,
+  CHECK (spend_percent + save_percent + give_percent = 100),
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE allowance_rules ADD COLUMN IF NOT EXISTS auto_split_all BOOLEAN NOT NULL DEFAULT false;
+
+-- Allowance transactions history
+CREATE TABLE IF NOT EXISTS allowance_transactions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  child_name TEXT NOT NULL,
+  amount NUMERIC(10, 2) NOT NULL,
+  spend_amount NUMERIC(10, 2) NOT NULL,
+  save_amount NUMERIC(10, 2) NOT NULL,
+  give_amount NUMERIC(10, 2) NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Gift links
+CREATE TABLE IF NOT EXISTS gift_links (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  child_name TEXT NOT NULL,
+  goal_id UUID REFERENCES goals(id) ON DELETE SET NULL,
+  token TEXT NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Gifts from relatives
+CREATE TABLE IF NOT EXISTS gifts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  gift_link_id UUID NOT NULL REFERENCES gift_links(id) ON DELETE CASCADE,
+  child_name TEXT NOT NULL,
+  goal_id UUID REFERENCES goals(id) ON DELETE SET NULL,
+  sender_name TEXT NOT NULL,
+  amount NUMERIC(10, 2) NOT NULL,
+  message TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+SELECT add_table_to_realtime('child_wallets');
+SELECT add_table_to_realtime('allowance_rules');
+SELECT add_table_to_realtime('allowance_transactions');
+SELECT add_table_to_realtime('gift_links');
+SELECT add_table_to_realtime('gifts');
+
+ALTER TABLE child_wallets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE allowance_rules ENABLE ROW LEVEL SECURITY;
+ALTER TABLE allowance_transactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE gift_links ENABLE ROW LEVEL SECURITY;
+ALTER TABLE gifts ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow anonymous select on child_wallets" ON child_wallets;
+CREATE POLICY "Allow anonymous select on child_wallets" ON child_wallets FOR SELECT TO anon USING (true);
+
+DROP POLICY IF EXISTS "Allow anonymous insert on child_wallets" ON child_wallets;
+CREATE POLICY "Allow anonymous insert on child_wallets" ON child_wallets FOR INSERT TO anon WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow anonymous update on child_wallets" ON child_wallets;
+CREATE POLICY "Allow anonymous update on child_wallets" ON child_wallets FOR UPDATE TO anon USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow anonymous select on allowance_rules" ON allowance_rules;
+CREATE POLICY "Allow anonymous select on allowance_rules" ON allowance_rules FOR SELECT TO anon USING (true);
+
+DROP POLICY IF EXISTS "Allow anonymous insert on allowance_rules" ON allowance_rules;
+CREATE POLICY "Allow anonymous insert on allowance_rules" ON allowance_rules FOR INSERT TO anon WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow anonymous update on allowance_rules" ON allowance_rules;
+CREATE POLICY "Allow anonymous update on allowance_rules" ON allowance_rules FOR UPDATE TO anon USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow anonymous select on allowance_transactions" ON allowance_transactions;
+CREATE POLICY "Allow anonymous select on allowance_transactions" ON allowance_transactions FOR SELECT TO anon USING (true);
+
+DROP POLICY IF EXISTS "Allow anonymous insert on allowance_transactions" ON allowance_transactions;
+CREATE POLICY "Allow anonymous insert on allowance_transactions" ON allowance_transactions FOR INSERT TO anon WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow anonymous select on gift_links" ON gift_links;
+CREATE POLICY "Allow anonymous select on gift_links" ON gift_links FOR SELECT TO anon USING (true);
+
+DROP POLICY IF EXISTS "Allow anonymous insert on gift_links" ON gift_links;
+CREATE POLICY "Allow anonymous insert on gift_links" ON gift_links FOR INSERT TO anon WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow anonymous select on gifts" ON gifts;
+CREATE POLICY "Allow anonymous select on gifts" ON gifts FOR SELECT TO anon USING (true);
+
+DROP POLICY IF EXISTS "Allow anonymous insert on gifts" ON gifts;
+CREATE POLICY "Allow anonymous insert on gifts" ON gifts FOR INSERT TO anon WITH CHECK (true);
